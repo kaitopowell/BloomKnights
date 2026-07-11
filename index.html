@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Price Passport — Purchasing Power Passport</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Quicksand:wght@400;500;600;700&family=Caveat:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#fdf6ec;
+    --paper-shadow:#f2e5cd;
+    --cover:#bcdaf3;
+    --cover-dark:#9ccfe7;
+    --ink:#5b4636;
+    --mint:#aad9c4;
+    --mint-dark:#7fbd9d;
+    --sky:#a9cfec;
+    --sun:#f6d67f;
+    --berry:#8ac5e0;
+    --berry-dark:#6b7ec9;
+    --line:#e3d3b8;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    min-height:100vh;
+    background:radial-gradient(circle at top, #e4effb, #d9e0f0 60%, #ccdbe7);
+    display:flex;
+    justify-content:center;
+    padding:40px 16px;
+    font-family:'Quicksand', sans-serif;
+    color:var(--ink);
+  }
+  .app{ width:100%; max-width:600px; }
+  .passport{
+    background:var(--paper);
+    border-radius:26px;
+    box-shadow:0 18px 40px rgba(150,100,110,0.28), 0 2px 0 #fff inset;
+    overflow:hidden;
+    border:2px dashed var(--cover-dark);
+  }
+  .cover{
+    background:linear-gradient(160deg, var(--cover), var(--cover-dark));
+    padding:26px 26px 22px;
+    position:relative;
+  }
+  .cover .eyebrow{ font-family:'Baloo 2', sans-serif; font-size:16px; color:#fff; opacity:0.9; }
+  .cover h1{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:800;
+    font-size:30px;
+    color:#fff;
+    margin:2px 0 4px;
+    text-shadow:0 2px 0 rgba(0,0,0,0.08);
+  }
+  .cover .sub{ font-size:12.5px; color:#fff; opacity:0.9; }
+  .tape{ position:absolute; height:22px; opacity:0.85; border-radius:2px; }
+  .tape.t1{ background:var(--sun); width:70px; top:-8px; left:24px; transform:rotate(-8deg); }
+  .tape.t2{ background:var(--mint); width:56px; top:-8px; right:34px; transform:rotate(10deg); }
+  .body-pad{ padding:22px 26px 26px; }
+  .field{ margin-bottom:18px; }
+  .field label{
+    display:block;
+    font-family:'Baloo 2', sans-serif;
+    font-weight:600;
+    font-size:14px;
+    margin-bottom:7px;
+    color:var(--ink);
+  }
+  .field .hint{ font-family:'Baloo 2', sans-serif; font-size:14px; color:var(--berry-dark); margin-top:4px; }
+  .field input[type="text"], .field input[type="number"]{
+    width:100%;
+    padding:11px 13px;
+    border-radius:12px;
+    border:2px solid var(--line);
+    background:#fff;
+    font-family:'Quicksand', sans-serif;
+    font-size:14px;
+    font-weight:600;
+    color:var(--ink);
+    outline:none;
+  }
+  .field input:focus{ border-color:var(--berry); }
+  .price-input-row{ display:flex; align-items:stretch; gap:8px; }
+  .price-input-row input{ flex:1; }
+  .currency-prefix{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-width:44px;
+    border-radius:12px;
+    border:2px solid var(--line);
+    background:#fff8f2;
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    font-size:14px;
+    color:var(--berry-dark);
+  }
+  .currency-grid, .city-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(96px, 1fr));
+    gap:8px;
+  }
+  .city-grid{ grid-template-columns:repeat(3, 1fr); }
+  .chip{
+    position:relative;
+    border:2px solid var(--line);
+    background:#fff;
+    border-radius:14px;
+    padding:9px 8px 8px;
+    text-align:center;
+    cursor:pointer;
+    user-select:none;
+    transition:transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+  }
+  .chip:hover{ transform:translateY(-2px); }
+  .chip .emoji{ font-size:20px; display:block; margin-bottom:3px;}
+  .chip .name{ font-family:'Baloo 2', sans-serif; font-weight:600; font-size:11px; }
+  .chip .code{ font-family:'Quicksand', sans-serif; font-size:9.5px; opacity:0.55; }
+  .chip.selected{ border-color:var(--berry); background:#fdeef0; }
+  .chip.selected::after{
+    content:"✓";
+    position:absolute;
+    top:-7px; right:-6px;
+    width:18px; height:18px;
+    background:var(--berry);
+    color:#fff;
+    border-radius:50%;
+    font-size:11px;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 2px 4px rgba(0,0,0,0.2);
+  }
+  .chip.disabled{ opacity:0.35; cursor:not-allowed; }
+  .chip.disabled:hover{ transform:none; }
+  .go-btn{
+    width:100%;
+    margin-top:22px;
+    padding:14px;
+    border:none;
+    border-radius:16px;
+    background:linear-gradient(160deg, var(--berry), var(--berry-dark));
+    color:#fff;
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    font-size:16px;
+    cursor:pointer;
+    box-shadow:0 6px 0 #5275a9, 0 10px 16px rgba(0,0,0,0.15);
+  }
+  .go-btn:active{ transform:translateY(4px); box-shadow:0 2px 0 #5265a9; }
+  .error-msg{
+    font-family:'Caveat', cursive;
+    font-size:15px;
+    color:var(--berry-dark);
+    text-align:center;
+    margin-top:10px;
+    min-height:18px;
+  }
+  #listingScreen, #resultScreen{ display:none; }
+  .back-link{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    background:none;
+    border:none;
+    font-family:'Baloo 2', sans-serif;
+    font-weight:600;
+    font-size:12.5px;
+    color:#fff;
+    opacity:0.9;
+    cursor:pointer;
+    margin-bottom:6px;
+    padding:0;
+  }
+  .item-banner{ font-family:'Baloo 2', sans-serif; font-size:16px; color:#fff; opacity:0.95; }
+  .item-banner b{ font-weight:700; }
+  .stops-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    font-family:'Baloo 2', sans-serif;
+    font-size:11.5px;
+    margin-bottom:16px;
+  }
+  .stops-row .stop{ padding:3px 10px; border-radius:20px; background:var(--sky); color:var(--ink); }
+  .stops-row .stop.win{ background:var(--sun); box-shadow:0 0 0 2px var(--berry) inset; }
+  .stops-row .stop.done{ background:var(--mint); }
+  .stops-row .stop.current{ background:var(--berry); color:#fff; }
+  .cards{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .city-card{ position:relative; background:#fff; border:2px solid var(--line); border-radius:16px; padding:13px 13px 14px; }
+  .city-card .tape{ top:-8px; left:50%; transform:translateX(-50%) rotate(-3deg); width:46px; height:16px; }
+  .city-card .top-row{ display:flex; align-items:center; gap:6px; margin-bottom:6px; }
+  .city-card .emoji{ font-size:18px; }
+  .city-card .code{ font-family:'Baloo 2', sans-serif; font-weight:700; font-size:14px; }
+  .city-card .country{ font-size:9.5px; opacity:0.55; margin-bottom:8px; }
+  .city-card .store-line{
+    font-family:'Baloo 2', sans-serif;
+    font-size:10.5px;
+    color:var(--berry-dark);
+    margin-bottom:6px;
+    min-height:13px;
+  }
+  .city-card .figure{ display:flex; justify-content:space-between; font-size:10.5px; margin-bottom:2px; }
+  .city-card .figure .k{ opacity:0.55; }
+  .city-card .figure .v{ font-weight:600; }
+  .city-card .landed{
+    margin-top:7px;
+    padding-top:7px;
+    border-top:1px dashed var(--line);
+    display:flex;
+    justify-content:space-between;
+    font-family:'Baloo 2', sans-serif;
+    font-size:13.5px;
+    font-weight:700;
+  }
+  .sticker{
+    position:absolute;
+    top:-10px; right:-8px;
+    width:46px; height:46px;
+    border-radius:50%;
+    background:var(--sky);
+    border:2px dashed #fff;
+    display:flex; align-items:center; justify-content:center;
+    text-align:center;
+    transform:rotate(8deg);
+    box-shadow:0 3px 6px rgba(0,0,0,0.15);
+  }
+  .sticker span{ font-family:'Baloo 2', sans-serif; font-size:6.8px; font-weight:700; color:var(--ink); line-height:1.15; }
+  .city-card.winner{ border-color:var(--berry); background:#fff8f2; }
+  .city-card.winner .sticker{ width:58px; height:58px; background:var(--sun); top:-14px; right:-12px; transform:rotate(10deg); }
+  .city-card.winner .sticker span{ font-size:8px; color:var(--berry-dark); }
+  .compare-wrap{ margin-top:18px; display:flex; align-items:center; justify-content:center; gap:6px; }
+  .price-tag{
+    position:relative;
+    flex:1;
+    max-width:190px;
+    background:#fff;
+    border:2px solid var(--line);
+    border-radius:14px;
+    padding:14px 10px 12px;
+    text-align:center;
+  }
+  .price-tag::before{
+    content:"";
+    position:absolute;
+    top:-7px; left:50%;
+    transform:translateX(-50%);
+    width:12px; height:12px;
+    border-radius:50%;
+    background:var(--paper);
+    border:2px solid var(--line);
+  }
+  .price-tag.home{ transform:rotate(-3deg); }
+  .price-tag.best{ transform:rotate(3deg); border-color:var(--sun); background:#fffdf5; }
+  .tag-label{ font-family:'Baloo 2', sans-serif; font-size:10px; letter-spacing:0.5px; opacity:0.6; margin-bottom:4px; }
+  .tag-amt{ font-family:'Baloo 2', sans-serif; font-weight:800; font-size:19px; color:var(--ink); }
+  .tag-sub{ font-size:10px; opacity:0.55; margin-top:2px; }
+  .compare-badge{
+    flex-shrink:0;
+    width:64px; height:64px;
+    border-radius:50%;
+    background:var(--mint);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    font-family:'Baloo 2', sans-serif;
+    box-shadow:0 3px 8px rgba(0,0,0,0.15);
+    border:2px dashed #fff;
+  }
+  .compare-badge.no-savings{ background:var(--sky); }
+  .compare-badge .arrow{ font-size:13px; line-height:1; color:#fff; }
+  .compare-badge .pct{ font-size:13px; font-weight:800; color:#fff; }
+  .compare-caption{
+    font-family:'Baloo 2', sans-serif;
+    font-size:16px;
+    text-align:center;
+    margin-top:10px;
+    color:var(--berry-dark);
+    line-height:1.4;
+  }
+  .footnote{ text-align:center; font-family:'Baloo 2', sans-serif; font-size:13px; color:#8a7060; margin-top:14px; }
+  .progress-dots{ display:flex; gap:5px; margin-top:6px; }
+  .progress-dots .dot{ width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,0.45); }
+  .progress-dots .dot.active{ background:#fff; }
+  .progress-dots .dot.filled{ background:var(--sun); }
+  .listing-hint{ font-family:'Baloo 2', sans-serif; font-size:15px; color:#8a7060; text-align:center; margin:-4px 0 14px; }
+  .loading-note{ font-family:'Baloo 2', sans-serif; font-size:14px; color:#8a7060; text-align:center; padding:20px 10px; }
+  .listing-list{ display:flex; flex-direction:column; gap:10px; }
+  .listing-card{
+    position:relative;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    border:2px solid var(--line);
+    background:#fff;
+    border-radius:16px;
+    padding:11px 13px;
+    cursor:pointer;
+    transition:transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+  }
+  .listing-card:hover{ transform:translateY(-2px); border-color:var(--berry); }
+  .listing-card .badge{
+    flex-shrink:0;
+    width:34px; height:34px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:15px;
+    background:var(--mint);
+  }
+  .listing-card.tag-bundle .badge{ background:var(--sky); }
+  .listing-card.tag-suspicious .badge{ background:#f2c9c9; }
+  .listing-card .info{ flex:1; min-width:0; }
+  .listing-card .store{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    font-size:13.5px;
+    color:var(--ink);
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .listing-card .note{ font-size:10.5px; opacity:0.6; margin-top:1px; }
+  .listing-card .price-col{ flex-shrink:0; text-align:right; }
+  .listing-card .price-col .amt{ font-family:'Baloo 2', sans-serif; font-weight:800; font-size:14.5px; color:var(--berry-dark); }
+  .listing-card .price-col .tag-lbl{ font-size:9px; font-family:'Baloo 2', sans-serif; opacity:0.55; text-transform:uppercase; }
+  .listing-card .ext-link{ display:inline-block; margin-top:2px; font-size:9.5px; color:var(--berry-dark); text-decoration:none; opacity:0.75; }
+  .listing-card .ext-link:hover{ text-decoration:underline; }
+  .listing-nav{ display:flex; justify-content:space-between; margin-top:16px; }
+  .skip-link{
+    background:none;
+    border:none;
+    font-family:'Baloo 2', sans-serif;
+    font-weight:600;
+    font-size:12.5px;
+    color:var(--berry-dark);
+    opacity:0.8;
+    cursor:pointer;
+    padding:6px 0;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="passport" id="formScreen">
+    <div class="cover">
+      <div class="tape t1"></div>
+      <div class="tape t2"></div>
+      <div class="eyebrow">"Buy smarter on every trip"</div>
+      <h1>Price Passport </h1>
+      <div class="sub">Find out where on your route it's cheapest to buy!</div>
+    </div>
+    <div class="body-pad">
+      <div class="field">
+        <label>Where are you buying from?</label>
+        <div class="city-grid" id="homeCountryGrid"></div>
+      </div>
+      <div class="field">
+        <label>What are you shopping for?</label>
+        <input type="text" id="itemInput" placeholder="Nintendo Switch, a camera, sneakers…">
+      </div>
+      <div class="field">
+        <label>Any specific spec/model? (optional)</label>
+        <input type="text" id="specInput" placeholder="e.g. 128GB, unlocked, body only">
+        <div class="hint"></div>
+      </div>
+      <div class="field">
+        <label>How much does it cost in your home country?</label>
+        <div class="price-input-row">
+          <div class="currency-prefix" id="currencyPrefix">$</div>
+          <input type="number" id="priceInput" placeholder="e.g. 500">
+        </div>
+        <div class="hint">just a rough number is fine</div>
+      </div>
+      <div class="field">
+        <label>Which countries are on your trip?</label>
+        <div class="city-grid" id="countryGrid"></div>
+        <div class="hint">Select one or more stops</div>
+      </div>
+      <button class="go-btn" id="goBtn"> Continue</button>
+      <div class="error-msg" id="errorMsg"></div>
+    </div>
+  </div>
+
+  <div class="passport" id="listingScreen">
+    <div class="cover">
+      <div class="tape t1"></div>
+      <div class="tape t2"></div>
+      <button class="back-link" id="listingBackBtn">← back</button>
+      <h1 id="listingCityTitle">City</h1>
+      <div class="item-banner" id="listingBanner"></div>
+      <div class="progress-dots" id="progressDots"></div>
+    </div>
+    <div class="body-pad">
+      <div class="listing-hint">Pick a listing</div>
+      <div class="listing-list" id="listingList"></div>
+      <div class="listing-nav">
+        <button class="skip-link" id="skipCityBtn">skip this stop →</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="passport" id="resultScreen">
+    <div class="cover">
+      <div class="tape t1"></div>
+      <div class="tape t2"></div>
+      <button class="back-link" id="backBtn">← edit trip</button>
+      <h1 id="resultItemTitle">Your Item</h1>
+      <div class="item-banner" id="resultBanner"></div>
+    </div>
+    <div class="body-pad">
+      <div class="stops-row" id="stopsRow"></div>
+      <div class="cards" id="cardsGrid"></div>
+      <div class="compare-wrap">
+        <div class="price-tag home">
+          <div class="tag-label">AT HOME</div>
+          <div class="tag-amt" id="homeAmt"></div>
+          <div class="tag-sub" id="homeCurr"></div>
+        </div>
+        <div class="compare-badge" id="compareBadge">
+          <span class="arrow" id="compareArrow">↓</span>
+          <span class="pct" id="comparePct"></span>
+        </div>
+        <div class="price-tag best">
+          <div class="tag-label" id="bestLabel">BEST DEAL!</div>
+          <div class="tag-amt" id="bestAmt"></div>
+          <div class="tag-sub" id="bestCurr"></div>
+        </div>
+      </div>
+      <div class="compare-caption" id="compareCaption"></div>
+      <div class="footnote">rates via live AI-screened listings</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const CURRENCIES = {
+  USD:{ symbol:'$',  emoji:'🇺🇸', name:'US Dollar' },
+  CAD:{ symbol:'$',  emoji:'🇨🇦', name:'Canadian Dollar' },
+  GBP:{ symbol:'£',  emoji:'🇬🇧', name:'British Pound' },
+  EUR:{ symbol:'€',  emoji:'🇪🇺', name:'Euro' },
+  JPY:{ symbol:'¥',  emoji:'🇯🇵', name:'Japanese Yen' },
+  KRW:{ symbol:'₩',  emoji:'🇰🇷', name:'Korean Won' },
+  INR:{ symbol:'₹',  emoji:'🇮🇳', name:'Indian Rupee' },
+  BRL:{ symbol:'R$', emoji:'🇧🇷', name:'Brazilian Real' },
+  MXN:{ symbol:'$',  emoji:'🇲🇽', name:'Mexican Peso' }
+};
+
+const COUNTRY_DATA = {
+  US:{ name:'United States', anchor_city:'New York',     currency:'USD', emoji:'🇺🇸' },
+  CA:{ name:'Canada',        anchor_city:'Toronto',      currency:'CAD', emoji:'🇨🇦' },
+  GB:{ name:'United Kingdom',anchor_city:'London',       currency:'GBP', emoji:'🇬🇧' },
+  FR:{ name:'France',        anchor_city:'Paris',        currency:'EUR', emoji:'🇫🇷' },
+  JP:{ name:'Japan',         anchor_city:'Tokyo',        currency:'JPY', emoji:'🇯🇵' },
+  KR:{ name:'South Korea',   anchor_city:'Seoul',        currency:'KRW', emoji:'🇰🇷' },
+  IN:{ name:'India',         anchor_city:'Mumbai',       currency:'INR', emoji:'🇮🇳' },
+  BR:{ name:'Brazil',        anchor_city:'São Paulo',    currency:'BRL', emoji:'🇧🇷' },
+  MX:{ name:'Mexico',        anchor_city:'Mexico City',  currency:'MXN', emoji:'🇲🇽' }
+};
+
+const FLAG_META = {
+  MATCH:      { cssTag:'match',      icon:'✅', label:'match' },
+  BUNDLE:     { cssTag:'bundle',     icon:'➖', label:'bundle' },
+  ACCESSORY:  { cssTag:'bundle',     icon:'🔧', label:'accessory' },
+  SUSPICIOUS: { cssTag:'suspicious', icon:'⚠️', label:'watch out' },
+  UNSCREENED: { cssTag:'suspicious', icon:'❓', label:'unscreened' }
+};
+
+let homeCountryCode = 'US';
+let selectedCountries = new Set(['KR','JP','FR']);
+
+let tripItem = '';
+let tripSpecNote = '';
+let tripHomePrice = 0;
+let countryQueue = [];
+let currentCountryIdx = 0;
+let listingSelections = {};
+
+function buildHomeCountryGrid(){
+  const grid = document.getElementById('homeCountryGrid');
+  grid.innerHTML = '';
+  Object.entries(COUNTRY_DATA).forEach(([code, c]) => {
+    const chip = document.createElement('div');
+    chip.className = 'chip' + (homeCountryCode === code ? ' selected' : '');
+    chip.innerHTML = `<span class="emoji">${c.emoji}</span><span class="name">${c.name}</span><div class="code">${c.anchor_city}</div>`;
+    chip.onclick = () => {
+      homeCountryCode = code;
+      selectedCountries.delete(code);
+      document.getElementById('currencyPrefix').textContent = CURRENCIES[COUNTRY_DATA[code].currency].symbol;
+      buildHomeCountryGrid();
+      buildCountryGrid();
+    };
+    grid.appendChild(chip);
+  });
+}
+buildHomeCountryGrid();
+document.getElementById('currencyPrefix').textContent = CURRENCIES[COUNTRY_DATA[homeCountryCode].currency].symbol;
+
+function buildCountryGrid(){
+  const grid = document.getElementById('countryGrid');
+  grid.innerHTML = '';
+  Object.entries(COUNTRY_DATA).forEach(([code, c]) => {
+    const isHome = code === homeCountryCode;
+    const chip = document.createElement('div');
+    chip.className = 'chip' + (selectedCountries.has(code) ? ' selected' : '') + (isHome ? ' disabled' : '');
+    chip.innerHTML = `<span class="emoji">${c.emoji}</span><span class="name">${c.name}${isHome ? ' (home)' : ''}</span><div class="code">${c.anchor_city}</div>`;
+    if(!isHome){
+      chip.onclick = () => {
+        if(selectedCountries.has(code)) selectedCountries.delete(code);
+        else selectedCountries.add(code);
+        buildCountryGrid();
+      };
+    }
+    grid.appendChild(chip);
+  });
+}
+buildCountryGrid();
+
+function fmt(n){
+  if(n === null || n === undefined || isNaN(n)) return '—';
+  return n.toLocaleString(undefined, {maximumFractionDigits: n >= 100 ? 0 : 2});
+}
+
+function showScreen(id){
+  ['formScreen','listingScreen','resultScreen'].forEach(s => {
+    document.getElementById(s).style.display = (s === id) ? 'block' : 'none';
+  });
+}
+
+document.getElementById('goBtn').onclick = () => {
+  const item = document.getElementById('itemInput').value.trim();
+  const specNote = document.getElementById('specInput').value.trim();
+  const homePrice = parseFloat(document.getElementById('priceInput').value);
+  const errorEl = document.getElementById('errorMsg');
+
+  if(!item){
+    errorEl.textContent = "tell us what you're shopping for!";
+    return;
+  }
+  if(isNaN(homePrice) || homePrice <= 0){
+    errorEl.textContent = "oops, pop in a rough price first!";
+    return;
+  }
+  const tripCountries = Array.from(selectedCountries).filter(code => code !== homeCountryCode);
+  if(tripCountries.length < 1){
+    errorEl.textContent = "pick at least 1 country on your route (that isn't home)!";
+    return;
+  }
+  errorEl.textContent = '';
+
+  tripItem = item;
+  tripSpecNote = specNote;
+  tripHomePrice = homePrice;
+  countryQueue = tripCountries;
+  currentCountryIdx = 0;
+  listingSelections = {};
+
+  showScreen('listingScreen');
+  renderListingStep();
+};
+
+document.getElementById('backBtn').onclick = () => showScreen('formScreen');
+
+document.getElementById('listingBackBtn').onclick = () => {
+  if(currentCountryIdx === 0){
+    showScreen('formScreen');
+  } else {
+    currentCountryIdx -= 1;
+    renderListingStep();
+  }
+};
+
+document.getElementById('skipCityBtn').onclick = () => {
+  advanceCountry();
+};
+
+function advanceCountry(){
+  if(currentCountryIdx < countryQueue.length - 1){
+    currentCountryIdx += 1;
+    renderListingStep();
+  } else {
+    finishListingsAndShowResult();
+  }
+}
+
+function updateProgressDots(){
+  const dots = document.getElementById('progressDots');
+  dots.innerHTML = '';
+  countryQueue.forEach((code, i) => {
+    const dot = document.createElement('div');
+    let cls = 'dot';
+    if(i === currentCountryIdx) cls += ' active';
+    else if(listingSelections[code]) cls += ' filled';
+    dot.className = cls;
+    dots.appendChild(dot);
+  });
+}
+
+async function fetchListingsForCountry(countryCode){
+  const res = await fetch('/api/listings', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      item_name: tripItem,
+      spec_note: tripSpecNote,
+      country_code: countryCode
+    })
+  });
+  const data = await res.json();
+  if(data.error) throw new Error(data.error);
+  return data;
+}
+
+async function renderListingStep(){
+  const countryCode = countryQueue[currentCountryIdx];
+  const c = COUNTRY_DATA[countryCode];
+
+  document.getElementById('listingCityTitle').textContent = `${c.emoji} ${c.name}`;
+  document.getElementById('listingBanner').innerHTML =
+    `Searching listings for <b>${tripItem}</b> in ${c.name}…`;
+
+  updateProgressDots();
+
+  const list = document.getElementById('listingList');
+  list.innerHTML = '<div class="loading-note">Loading listings…</div>';
+
+  let listings = [];
+  let countryCurrency = c.currency;
+  try {
+    const data = await fetchListingsForCountry(countryCode);
+    listings = data.listings || [];
+    countryCurrency = data.currency || countryCurrency;
+  } catch (err){
+    list.innerHTML = `<div class="loading-note">Couldn't load listings (${err.message}). Try "skip this stop" below.</div>`;
+    return;
+  }
+
+  if(listings.length === 0){
+    list.innerHTML = '<div class="loading-note">No listings found — try "skip this stop" below.</div>';
+    return;
+  }
+
+  list.innerHTML = '';
+  listings.forEach(listing => {
+    const meta = FLAG_META[listing.ai_flag] || FLAG_META.UNSCREENED;
+    const card = document.createElement('div');
+    card.className = 'listing-card tag-' + meta.cssTag;
+    card.innerHTML = `
+      <div class="badge">${meta.icon}</div>
+      <div class="info">
+        <div class="store">${listing.title || listing.source || 'Listing'}</div>
+        <div class="note">${listing.ai_reason || listing.source || ''}</div>
+        ${listing.link ? `<a class="ext-link" href="${listing.link}" target="_blank" rel="noopener" onclick="event.stopPropagation()">view listing ↗</a>` : ''}
+      </div>
+      <div class="price-col">
+        <div class="amt">${listing.price_str || '—'}</div>
+        <div class="tag-lbl">${meta.label}</div>
+      </div>
+    `;
+    card.onclick = () => {
+      listingSelections[countryCode] = {
+        store: listing.source || listing.title,
+        localAmt: listing.extracted_price,
+        currency: countryCurrency,
+        tag: listing.ai_flag
+      };
+      advanceCountry();
+    };
+    list.appendChild(card);
+  });
+}
+
+async function finishListingsAndShowResult(){
+  const itineraryPayload = countryQueue
+    .filter(code => listingSelections[code] && listingSelections[code].localAmt != null)
+    .map(code => ({
+      country_code: code,
+      local_price: listingSelections[code].localAmt,
+      date: null
+    }));
+
+  showScreen('resultScreen');
+  document.getElementById('resultItemTitle').textContent = tripItem;
+  document.getElementById('resultBanner').textContent = 'Crunching the numbers…';
+  document.getElementById('stopsRow').innerHTML = '';
+  document.getElementById('cardsGrid').innerHTML = '';
+  document.getElementById('compareCaption').textContent = '';
+
+  if(itineraryPayload.length === 0){
+    document.getElementById('resultBanner').textContent =
+      'No stops had a listing picked — go back and pick at least one, or skip fewer stops.';
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/calculate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        item_name: tripItem,
+        spec_note: tripSpecNote,
+        home_country_code: homeCountryCode,
+        home_price: tripHomePrice,
+        itinerary: itineraryPayload
+      })
+    });
+    const data = await res.json();
+    if(data.error) throw new Error(data.error);
+    renderResultFromBackend(data);
+  } catch (err){
+    document.getElementById('resultBanner').textContent = `Couldn't calculate results (${err.message}).`;
+  }
+}
+
+function renderResultFromBackend(data){
+  const homeCur = data.home_currency;
+  const homeSymbol = (CURRENCIES[homeCur] || {}).symbol || '';
+  const results = data.results;
+  const winner = results[0];
+  const homeEntry = results.find(r => r.is_home);
+
+  document.getElementById('resultItemTitle').textContent = data.item;
+  document.getElementById('resultBanner').innerHTML =
+    `${homeSymbol}${fmt(homeEntry.local_price)} at home → compared across ${results.length - 1} stops on your route`;
+
+  const stopsRow = document.getElementById('stopsRow');
+  stopsRow.innerHTML = '';
+  results.forEach(r => {
+    const c = COUNTRY_DATA[r.country] || {};
+    const span = document.createElement('span');
+    span.className = 'stop' + (r === winner ? ' win' : '');
+    span.textContent = (c.emoji ? c.emoji + ' ' : '') + r.location_label;
+    stopsRow.appendChild(span);
+  });
+
+  const grid = document.getElementById('cardsGrid');
+  grid.innerHTML = '';
+  results.forEach(r => {
+    const isWinner = r === winner;
+    const c = COUNTRY_DATA[r.country] || {};
+    const localSymbol = (CURRENCIES[r.local_currency] || {}).symbol || '';
+    const storeLine = r.is_home
+      ? '🏠 your price'
+      : (listingSelections[r.country] ? '🏬 ' + listingSelections[r.country].store : '');
+    const card = document.createElement('div');
+    card.className = 'city-card' + (isWinner ? ' winner' : '');
+    card.innerHTML = `
+      <div class="tape"></div>
+      <div class="top-row"><span class="emoji">${c.emoji || ''}</span><span class="code">${r.location_label}</span></div>
+      <div class="country">${r.local_currency}${r.is_home ? ' · home' : ''}</div>
+      <div class="store-line">${storeLine}</div>
+      <div class="figure"><span class="k">Local price</span><span class="v">${localSymbol}${fmt(r.local_price)}</span></div>
+      <div class="figure"><span class="k">→ ${homeCur}</span><span class="v">${homeSymbol}${fmt(r.converted_price)}</span></div>
+      <div class="figure"><span class="k">Tax refund</span><span class="v">${r.refund_applied > 0 ? homeSymbol + fmt(r.refund_applied) : '— n/a'}</span></div>
+      <div class="landed"><span>Landed</span><span>${homeSymbol}${fmt(r.effective_price)}</span></div>
+      <div class="sticker"><span>${isWinner ? 'BEST<br>DEAL' : 'skip<br>it'}</span></div>
+    `;
+    grid.appendChild(card);
+  });
+
+  document.getElementById('homeAmt').textContent = homeSymbol + fmt(homeEntry.local_price);
+  document.getElementById('homeCurr').textContent = homeCur;
+  document.getElementById('bestAmt').textContent = homeSymbol + fmt(winner.effective_price);
+  document.getElementById('bestCurr').textContent = winner.location_label + ' · ' + homeCur;
+
+  const diff = homeEntry.effective_price - winner.effective_price;
+  const badge = document.getElementById('compareBadge');
+  const arrow = document.getElementById('compareArrow');
+  const pctEl = document.getElementById('comparePct');
+  const caption = document.getElementById('compareCaption');
+  const bestLabel = document.getElementById('bestLabel');
+
+  if(!winner.is_home && diff > 0.01){
+    const pct = Math.round((diff / homeEntry.effective_price) * 100);
+    badge.classList.remove('no-savings');
+    arrow.textContent = '↓';
+    pctEl.textContent = pct + '%';
+    bestLabel.textContent = 'BEST DEAL';
+  } else {
+    badge.classList.add('no-savings');
+    arrow.textContent = '🏠';
+    pctEl.textContent = '';
+    bestLabel.textContent = 'HOME WINS';
+  }
+  caption.textContent = data.recommendation;
+
+  showScreen('resultScreen');
+}
+</script>
+</body>
+</html>
