@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Price Passport — Purchasing Power Passport</title>
+<title>Priceport — Purchasing Power Passport</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Quicksand:wght@400;500;600;700&family=Caveat:wght@500;600&display=swap" rel="stylesheet">
 <style>
@@ -117,6 +117,17 @@
   .chip .emoji{ font-size:20px; display:block; margin-bottom:3px;}
   .chip .name{ font-family:'Baloo 2', sans-serif; font-weight:600; font-size:11px; }
   .chip .code{ font-family:'Quicksand', sans-serif; font-size:9.5px; opacity:0.55; }
+  .chip .currency-tag{
+    display:inline-block;
+    margin-top:3px;
+    padding:1px 7px;
+    border-radius:8px;
+    background:var(--mint);
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    font-size:9.5px;
+    color:var(--ink);
+  }
   .chip.selected{ border-color:var(--berry); background:#fdeef0; }
   .chip.selected::after{
     content:"✓";
@@ -347,7 +358,7 @@
       <div class="tape t1"></div>
       <div class="tape t2"></div>
       <div class="eyebrow">"Buy smarter on every trip"</div>
-      <h1>Price Passport </h1>
+      <h1>Priceport</h1>
       <div class="sub">Find out where on your route it's cheapest to buy!</div>
     </div>
     <div class="body-pad">
@@ -483,7 +494,7 @@ function buildHomeCountryGrid(){
   Object.entries(COUNTRY_DATA).forEach(([code, c]) => {
     const chip = document.createElement('div');
     chip.className = 'chip' + (homeCountryCode === code ? ' selected' : '');
-    chip.innerHTML = `<span class="emoji">${c.emoji}</span><span class="name">${c.name}</span><div class="code">${c.anchor_city}</div>`;
+    chip.innerHTML = `<span class="emoji">${c.emoji}</span><span class="name">${c.name}</span><div class="code">${c.anchor_city}</div><div class="currency-tag">${CURRENCIES[c.currency].symbol} ${c.currency}</div>`;
     chip.onclick = () => {
       homeCountryCode = code;
       selectedCountries.delete(code);
@@ -504,7 +515,7 @@ function buildCountryGrid(){
     const isHome = code === homeCountryCode;
     const chip = document.createElement('div');
     chip.className = 'chip' + (selectedCountries.has(code) ? ' selected' : '') + (isHome ? ' disabled' : '');
-    chip.innerHTML = `<span class="emoji">${c.emoji}</span><span class="name">${c.name}${isHome ? ' (home)' : ''}</span><div class="code">${c.anchor_city}</div>`;
+    chip.innerHTML = `<span class="emoji">${c.emoji}</span><span class="name">${c.name}${isHome ? ' (home)' : ''}</span><div class="code">${c.anchor_city}</div><div class="currency-tag">${CURRENCIES[c.currency].symbol} ${c.currency}</div>`;
     if(!isHome){
       chip.onclick = () => {
         if(selectedCountries.has(code)) selectedCountries.delete(code);
